@@ -122,8 +122,8 @@ object ServerEndpointRecipe {
    * The list of server endpoints.
    *
    * @note AkkaHttp20Plaintext is not included below because the test
-   *       EndpointIntegrationSpecificationSpec.respond with the highest supported HTTP protocol fails because
-   *       the test doesn't pass through the expectedHttpVersions of the recipe to the OkHttpClient, and thus the
+   *       EndpointIntegrationSpecificationSpec.respond with the highest supported HTTP protocol fails because the
+   *       test doesn't pass through the expectedHttpVersions of the recipe to the OkHttpClient, and thus the
    *       client hits the server using its default protocols, which include HTTP/1.1, which of course doesn't work.
    *       Updating the test to use the expectedHttpVersions would have required refactoring beyond my pay grade.
    */
