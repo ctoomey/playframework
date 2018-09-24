@@ -9,7 +9,8 @@ import buildinfo.BuildInfo
 object Dependencies {
 
   val akkaVersion: String = sys.props.getOrElse("akka.version", "2.5.16")
-  val akkaHttpVersion = "10.1.3"
+  val akkaHttpVersion = "10.1.5"
+  val akkaHttpVersion_2_13 = "10.1.3" // akka-http dropped support for Scala 2.13: https://github.com/akka/akka-http/issues/2166
   val playJsonVersion = "2.6.10"
 
   val logback = "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -103,7 +104,7 @@ object Dependencies {
 
   val javaFormsDeps = Seq(
 
-    "org.hibernate" % "hibernate-validator" % "6.0.12.Final",
+    "org.hibernate.validator" % "hibernate-validator" % "6.0.13.Final",
 
     ("org.springframework" % "spring-context" % springFrameworkVersion)
       .exclude("org.springframework", "spring-aop")
@@ -330,11 +331,17 @@ object Dependencies {
 
         project.dependsOn(withConfig)
       } else {
-        val dep = "com.typesafe.akka" %% module % Dependencies.akkaHttpVersion
-        val withConfig =
-          if (config == "") dep
-          else dep % config
-        project.settings(libraryDependencies += withConfig)
+        project.settings(libraryDependencies += {
+          val akkaHttpVersion = CrossVersion.partialVersion(scalaVersion.value) match {
+            case Some((2, 13)) => Dependencies.akkaHttpVersion_2_13
+            case _ => Dependencies.akkaHttpVersion
+          }
+          val dep = "com.typesafe.akka" %% module % akkaHttpVersion
+          val withConfig =
+            if (config == "") dep
+            else dep % config
+          withConfig
+        })
       }
   }
 }
