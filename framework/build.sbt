@@ -13,8 +13,14 @@ import sbt.Keys.parallelExecution
 import sbt.ScriptedPlugin._
 import sbt._
 
+lazy val livongoPublishSettings = Seq(
+  publishTo := Some("Artifactory Realm" at "http://52.7.159.52/artifactory/ext-release-local"),
+  credentials += Credentials("Artifactory Realm", "52.7.159.52", "admin", "AP51HF7hmZL7Y9oLgMWbt9ABDBr")
+)
+
 lazy val BuildLinkProject = PlayNonCrossBuiltProject("Build-Link", "build-link")
     .dependsOn(PlayExceptionsProject)
+  .settings(livongoPublishSettings: _*)
 
 // run-support project is only compiled against sbt scala version
 lazy val RunSupportProject = PlaySbtProject("Run-Support", "run-support")
@@ -22,6 +28,7 @@ lazy val RunSupportProject = PlaySbtProject("Run-Support", "run-support")
       target := target.value / "run-support",
       libraryDependencies ++= runSupportDependencies((sbtVersion in pluginCrossBuild).value)
     ).dependsOn(BuildLinkProject)
+  .settings(livongoPublishSettings: _*)
 
 lazy val RoutesCompilerProject = PlayDevelopmentProject("Routes-Compiler", "routes-compiler")
     .enablePlugins(SbtTwirl)
@@ -45,17 +52,22 @@ lazy val SbtRoutesCompilerProject = PlaySbtProject("SBT-Routes-Compiler", "route
       libraryDependencies ++= routesCompilerDependencies(scalaVersion.value),
       TwirlKeys.templateFormats := Map("twirl" -> "play.routes.compiler.ScalaFormat")
     )
+  .settings(livongoPublishSettings: _*)
+  .settings(publishMavenStyle := true)
 
 lazy val StreamsProject = PlayCrossBuiltProject("Play-Streams", "play-streams")
     .settings(libraryDependencies ++= streamsDependencies)
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayExceptionsProject = PlayNonCrossBuiltProject("Play-Exceptions", "play-exceptions")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJodaFormsProject = PlayCrossBuiltProject("Play-Joda-Forms", "play-joda-forms")
     .settings(
       libraryDependencies ++= joda
     )
     .dependsOn(PlayProject, PlaySpecs2Project % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayProject = PlayCrossBuiltProject("Play", "play")
     .enablePlugins(SbtTwirl)
@@ -91,6 +103,7 @@ lazy val PlayProject = PlayCrossBuiltProject("Play", "play")
       BuildLinkProject,
       StreamsProject
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayServerProject = PlayCrossBuiltProject("Play-Server", "play-server")
     .settings(libraryDependencies ++= playServerDependencies)
@@ -98,10 +111,12 @@ lazy val PlayServerProject = PlayCrossBuiltProject("Play-Server", "play-server")
       PlayProject,
       PlayGuiceProject % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayNettyServerProject = PlayCrossBuiltProject("Play-Netty-Server", "play-netty-server")
     .settings(libraryDependencies ++= netty)
     .dependsOn(PlayServerProject)
+  .settings(livongoPublishSettings: _*)
 
 import AkkaDependency._
 lazy val PlayAkkaHttpServerProject = PlayCrossBuiltProject("Play-Akka-Http-Server", "play-akka-http-server")
@@ -109,19 +124,24 @@ lazy val PlayAkkaHttpServerProject = PlayCrossBuiltProject("Play-Akka-Http-Serve
     .dependsOn(PlayGuiceProject % "test")
     .settings(
       libraryDependencies ++= specs2Deps.map(_ % "test")
-    ).addAkkaModuleDependency("akka-http-core")
+    )
+  .addAkkaModuleDependency("akka-http-core")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayAkkaHttp2SupportProject = PlayCrossBuiltProject("Play-Akka-Http2-Support", "play-akka-http2-support")
     .dependsOn(PlayAkkaHttpServerProject)
     .addAkkaModuleDependency("akka-http2-support")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJdbcApiProject = PlayCrossBuiltProject("Play-JDBC-Api", "play-jdbc-api")
     .dependsOn(PlayProject)
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJdbcProject: Project = PlayCrossBuiltProject("Play-JDBC", "play-jdbc")
     .settings(libraryDependencies ++= jdbcDeps)
     .dependsOn(PlayJdbcApiProject)
     .dependsOn(PlaySpecs2Project % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJdbcEvolutionsProject = PlayCrossBuiltProject("Play-JDBC-Evolutions", "play-jdbc-evolutions")
     .settings(libraryDependencies += derbyDatabase % Test)
@@ -129,16 +149,19 @@ lazy val PlayJdbcEvolutionsProject = PlayCrossBuiltProject("Play-JDBC-Evolutions
     .dependsOn(PlaySpecs2Project % "test")
     .dependsOn(PlayJdbcProject % "test->test")
     .dependsOn(PlayJavaJdbcProject % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJavaJdbcProject = PlayCrossBuiltProject("Play-Java-JDBC", "play-java-jdbc")
     .dependsOn(PlayJdbcProject % "compile->compile;test->test", PlayJavaProject)
     .dependsOn(PlaySpecs2Project % "test", PlayGuiceProject % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJpaProject = PlayCrossBuiltProject("Play-Java-JPA", "play-java-jpa")
     .settings(libraryDependencies ++= jpaDeps)
     .dependsOn(PlayJavaJdbcProject % "compile->compile;test->test")
     .dependsOn(PlayJdbcEvolutionsProject % "test")
     .dependsOn(PlaySpecs2Project % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayTestProject = PlayCrossBuiltProject("Play-Test", "play-test")
     .settings(
@@ -148,12 +171,14 @@ lazy val PlayTestProject = PlayCrossBuiltProject("Play-Test", "play-test")
   PlayGuiceProject,
   PlayAkkaHttpServerProject
 )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlaySpecs2Project = PlayCrossBuiltProject("Play-Specs2", "play-specs2")
     .settings(
       libraryDependencies ++= specs2Deps,
       parallelExecution in Test := false
     ).dependsOn(PlayTestProject)
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJavaProject = PlayCrossBuiltProject("Play-Java", "play-java")
     .settings(libraryDependencies ++= javaDeps ++ javaTestDeps)
@@ -163,6 +188,7 @@ lazy val PlayJavaProject = PlayCrossBuiltProject("Play-Java", "play-java")
       PlaySpecs2Project % "test",
       PlayGuiceProject % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayJavaFormsProject = PlayCrossBuiltProject("Play-Java-Forms", "play-java-forms")
     .settings(
@@ -171,18 +197,21 @@ lazy val PlayJavaFormsProject = PlayCrossBuiltProject("Play-Java-Forms", "play-j
     ).dependsOn(
       PlayJavaProject % "compile;test->test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayDocsProject = PlayCrossBuiltProject("Play-Docs", "play-docs")
     .settings(Docs.settings: _*)
     .settings(
       libraryDependencies ++= playDocsDependencies
     ).dependsOn(PlayAkkaHttpServerProject)
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayGuiceProject = PlayCrossBuiltProject("Play-Guice", "play-guice")
     .settings(libraryDependencies ++= guiceDeps ++ specs2Deps.map(_ % "test"))
     .dependsOn(
       PlayProject % "compile;test->test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val SbtPluginProject = PlaySbtPluginProject("SBT-Plugin", "sbt-plugin")
     .settings(
@@ -202,6 +231,8 @@ lazy val SbtPluginProject = PlaySbtPluginProject("SBT-Plugin", "sbt-plugin")
         val () = (publishLocal in RoutesCompilerProject).value
       }
     ).dependsOn(SbtRoutesCompilerProject, RunSupportProject)
+  .settings(livongoPublishSettings: _*)
+//  .settings(publishMavenStyle := true)
 
 lazy val PlayLogback = PlayCrossBuiltProject("Play-Logback", "play-logback")
     .settings(
@@ -212,6 +243,7 @@ lazy val PlayLogback = PlayCrossBuiltProject("Play-Logback", "play-logback")
     )
     .dependsOn(PlayProject)
     .dependsOn(PlaySpecs2Project % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayWsProject = PlayCrossBuiltProject("Play-WS", "play-ws")
     .settings(
@@ -221,6 +253,7 @@ lazy val PlayWsProject = PlayCrossBuiltProject("Play-WS", "play-ws")
       scalacOptions in Test := (scalacOptions in Test).value diff Seq("-deprecation")
   ).dependsOn(PlayProject)
   .dependsOn(PlayTestProject % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayAhcWsProject = PlayCrossBuiltProject("Play-AHC-WS", "play-ahc-ws")
   .settings(
@@ -231,6 +264,7 @@ lazy val PlayAhcWsProject = PlayCrossBuiltProject("Play-AHC-WS", "play-ahc-ws")
   ).dependsOn(PlayWsProject, PlayCaffeineCacheProject % "test")
     .dependsOn(PlaySpecs2Project % "test")
     .dependsOn(PlayTestProject % "test->test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayOpenIdProject = PlayCrossBuiltProject("Play-OpenID", "play-openid")
   .settings(
@@ -239,6 +273,7 @@ lazy val PlayOpenIdProject = PlayCrossBuiltProject("Play-OpenID", "play-openid")
     scalacOptions in Test := (scalacOptions in Test).value diff Seq("-deprecation")
   ).dependsOn(PlayAhcWsProject)
   .dependsOn(PlaySpecs2Project % "test")
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayFiltersHelpersProject = PlayCrossBuiltProject("Filters-Helpers", "play-filters-helpers")
     .settings(
@@ -246,6 +281,7 @@ lazy val PlayFiltersHelpersProject = PlayCrossBuiltProject("Filters-Helpers", "p
       parallelExecution in Test := false
     ).dependsOn(PlayProject, PlayTestProject % "test",
         PlayJavaProject % "test", PlaySpecs2Project % "test", PlayAhcWsProject % "test")
+  .settings(livongoPublishSettings: _*)
 
 // This project is just for testing Play, not really a public artifact
 lazy val PlayIntegrationTestProject = PlayCrossBuiltProject("Play-Integration-Test", "play-integration-test")
@@ -324,6 +360,7 @@ lazy val PlayCacheProject = PlayCrossBuiltProject("Play-Cache", "play-cache")
       PlayProject,
       PlaySpecs2Project % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 
 lazy val PlayEhcacheProject = PlayCrossBuiltProject("Play-Ehcache", "play-ehcache")
@@ -335,6 +372,7 @@ lazy val PlayEhcacheProject = PlayCrossBuiltProject("Play-Ehcache", "play-ehcach
       PlayCacheProject,
       PlaySpecs2Project % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayCaffeineCacheProject = PlayCrossBuiltProject("Play-Caffeine-Cache", "play-caffeine-cache")
     .settings(
@@ -346,6 +384,7 @@ lazy val PlayCaffeineCacheProject = PlayCrossBuiltProject("Play-Caffeine-Cache",
       PlayCacheProject,
       PlaySpecs2Project % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 // JSR 107 cache bindings (note this does not depend on ehcache)
 lazy val PlayJCacheProject = PlayCrossBuiltProject("Play-JCache", "play-jcache")
@@ -357,12 +396,14 @@ lazy val PlayJCacheProject = PlayCrossBuiltProject("Play-JCache", "play-jcache")
       PlayCaffeineCacheProject % "test", // provide a cachemanager implementation
       PlaySpecs2Project % "test"
     )
+  .settings(livongoPublishSettings: _*)
 
 lazy val PlayDocsSbtPlugin = PlaySbtPluginProject("Play-Docs-SBT-Plugin", "play-docs-sbt-plugin")
     .enablePlugins(SbtTwirl)
     .settings(
       libraryDependencies ++= playDocsSbtPluginDependencies
     ).dependsOn(SbtPluginProject)
+  .settings(livongoPublishSettings: _*)
 
 lazy val publishedProjects = Seq[ProjectReference](
   PlayProject,
@@ -425,4 +466,5 @@ lazy val PlayFramework = Project("Play-Framework", file("."))
       mimaReportBinaryIssues := (),
       commands += Commands.quickPublish
     ).settings(Release.settings: _*)
+  .settings(livongoPublishSettings: _*)
     .aggregate(publishedProjects: _*)
