@@ -232,7 +232,7 @@ lazy val SbtPluginProject = PlaySbtPluginProject("SBT-Plugin", "sbt-plugin")
       }
     ).dependsOn(SbtRoutesCompilerProject, RunSupportProject)
   .settings(livongoPublishSettings: _*)
-//  .settings(publishMavenStyle := true)
+  .settings(publishMavenStyle := true)
 
 lazy val PlayLogback = PlayCrossBuiltProject("Play-Logback", "play-logback")
     .settings(
